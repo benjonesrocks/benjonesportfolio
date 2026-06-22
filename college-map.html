@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>US College Data Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream:        #F5F0FF;
+      --ink:          #1A1A1A;
+      --forest:       #2B7CB8;
+      --lavender:     #F0D7FF;
+      --orange:       #FFA946;
+      --sage:         #E4E4D0;
+      --muted:        #8A8A80;
+      --inverted:     #F5F0FF;
+      --map-lo:       #C2BDB8;
+      --map-hi:       #0C3562;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Figtree', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Section ── */
+    .map-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 3rem;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--forest);
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 1.1rem;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 1.25rem;
+      height: 1.5px;
+      background: var(--forest);
+    }
+
+    /* ── Headings ── */
+    h2.map-title {
+      font-family: 'EB Garamond', serif;
+      font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 400;
+      margin-bottom: 0.65rem;
+    }
+    h2.map-title em {
+      font-style: italic;
+      color: var(--forest);
+    }
+    .map-subtitle {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 520px;
+      margin-bottom: 2.25rem;
+    }
+
+    /* ── Toggle buttons ── */
+    .metric-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1.75rem;
+    }
+    .metric-btn {
+      font-family: 'Figtree', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.48rem 1.05rem;
+      border-radius: 9999px;
+      border: 1.5px solid rgba(26,26,26,0.15);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.16s, border-color 0.16s, color 0.16s, transform 0.14s;
+    }
+    .metric-btn:hover {
+      background: var(--lavender);
+      border-color: transparent;
+      color: var(--ink);
+      transform: translateY(-1px);
+    }
+    .metric-btn.active {
+      background: var(--forest);
+      border-color: var(--forest);
+      color: #fff;
+    }
+
+    /* ── Map + legend layout ── */
+    .map-layout {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+
+    /* ── Map card ── */
+    .map-card {
+      flex: 1;
+      min-width: 0;
+      background: #fff;
+      border: 1.5px solid rgba(26,26,26,0.08);
+      border-radius: 16px;
+      padding: 1.75rem 1.75rem 1.25rem;
+    }
+    #us-map {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ── State paths ── */
+    .state {
+      stroke: #fff;
+      stroke-width: 0.55;
+      cursor: pointer;
+      transition: stroke 0.1s, stroke-width 0.1s;
+    }
+    .state:hover { stroke: var(--ink); stroke-width: 1.4; }
+    .state-borders {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 0.5;
+      pointer-events: none;
+    }
+
+    /* ── Legend panel ── */
+    .legend-panel {
+      width: 190px;
+      flex-shrink: 0;
+      background: #fff;
+      border: 1.5px solid rgba(26,26,26,0.08);
+      border-radius: 16px;
+      padding: 1.5rem 1.25rem;
+    }
+    .legend-metric-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--forest);
+      margin-bottom: 1.1rem;
+    }
+    .legend-items { display: flex; flex-direction: column; gap: 0.55rem; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .legend-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .legend-range {
+      font-size: 0.73rem;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .legend-note {
+      font-size: 0.64rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(26,26,26,0.07);
+    }
+
+    /* ── Tooltip ── */
+    #tooltip {
+      position: fixed;
+      background: var(--ink);
+      color: var(--inverted);
+      border-radius: 14px;
+      padding: 1.1rem 1.3rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      z-index: 9999;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+      min-width: 170px;
+      max-width: 220px;
+    }
+    #tooltip.visible { opacity: 1; }
+
+    .tt-state {
+      font-family: 'EB Garamond', serif;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      font-weight: 400;
+      line-height: 1.15;
+      margin-bottom: 0.6rem;
+    }
+    .tt-metric-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(245,240,255,0.5);
+      margin-bottom: 0.2rem;
+    }
+    .tt-metric-value {
+      font-size: 1.55rem;
+      font-family: 'EB Garamond', serif;
+      letter-spacing: -0.02em;
+      color: var(--orange);
+      line-height: 1;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 820px) {
+      .map-section { padding: 4rem 1.5rem; }
+      .map-layout { flex-direction: column; }
+      .legend-panel { width: 100%; }
+      .legend-items { flex-direction: row; flex-wrap: wrap; gap: 0.6rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="map-section">
+  <div class="section-label">Explore by State</div>
+  <h2 class="map-title">US college data, <em>mapped.</em></h2>
+  <p class="map-subtitle">Hover any state to explore its average university data. Toggle between metrics (darker blue means a higher value).</p>
+
+  <div class="metric-buttons">
+    <button class="metric-btn active" data-metric="admissionRate">Admission Rate</button>
+    <button class="metric-btn" data-metric="avgSAT">Avg SAT</button>
+    <button class="metric-btn" data-metric="avgStudentSize">Student Size</button>
+    <button class="metric-btn" data-metric="inStateTuition">In-State Tuition</button>
+    <button class="metric-btn" data-metric="outStateTuition">Out-of-State Tuition</button>
+    <button class="metric-btn" data-metric="medianEarnings">Median Earnings</button>
+  </div>
+
+  <div class="map-layout">
+    <!-- Map -->
+    <div class="map-card">
+      <svg id="us-map" viewBox="0 0 960 580"></svg>
+    </div>
+
+    <!-- Side legend -->
+    <div class="legend-panel">
+      <div class="legend-metric-label" id="legend-title">Admission Rate</div>
+      <div class="legend-items" id="legend-items">
+        <!-- populated by JS -->
+      </div>
+      <div class="legend-note">
+        Averages across universities tracked in the dataset. States marked † use supplemental NCES/IPEDS data.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Tooltip: shows only the active metric -->
+<div id="tooltip">
+  <div class="tt-state" id="tt-state"></div>
+  <div class="tt-metric-label" id="tt-label"></div>
+  <div class="tt-metric-value" id="tt-value"></div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson@3/dist/topojson.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE DATA
+//  Primary: College Scorecard / DOE (our spreadsheet)
+//  † Supplemental: NCES/IPEDS statewide averages
+// ═══════════════════════════════════════════════════════
+const stateData = {
+  "AL": { name:"Alabama",          sup:false, n:6,  admissionRate:66.3, avgSAT:1182, avgStudentSize:14779, inStateTuition:11706, outStateTuition:26094, medianEarnings:53595 },
+  "AK": { name:"Alaska",           sup:true,  n:2,  admissionRate:76.8, avgSAT:1105, avgStudentSize:11200, inStateTuition:8136,  outStateTuition:23136, medianEarnings:55800 },
+  "AZ": { name:"Arizona",          sup:true,  n:3,  admissionRate:84.5, avgSAT:1183, avgStudentSize:41700, inStateTuition:12300, outStateTuition:30500, medianEarnings:62668 },
+  "AR": { name:"Arkansas",         sup:false, n:1,  admissionRate:74.3, avgSAT:1169, avgStudentSize:28677, inStateTuition:10104, outStateTuition:29966, medianEarnings:58191 },
+  "CA": { name:"California",       sup:false, n:19, admissionRate:40.4, avgSAT:1414, avgStudentSize:21369, inStateTuition:32258, outStateTuition:49756, medianEarnings:82894 },
+  "CO": { name:"Colorado",         sup:false, n:2,  admissionRate:67.7, avgSAT:1264, avgStudentSize:8337,  inStateTuition:16149, outStateTuition:37608, medianEarnings:80803 },
+  "CT": { name:"Connecticut",      sup:false, n:6,  admissionRate:50.1, avgSAT:1308, avgStudentSize:8901,  inStateTuition:44263, outStateTuition:48624, medianEarnings:80117 },
+  "DC": { name:"Washington D.C.",  sup:false, n:4,  admissionRate:40.8, avgSAT:1379, avgStudentSize:9031,  inStateTuition:57577, outStateTuition:57577, medianEarnings:83701 },
+  "DE": { name:"Delaware",         sup:false, n:1,  admissionRate:70.6, avgSAT:1292, avgStudentSize:19071, inStateTuition:16810, outStateTuition:41400, medianEarnings:72950 },
+  "FL": { name:"Florida",          sup:false, n:15, admissionRate:46.9, avgSAT:1217, avgStudentSize:21289, inStateTuition:16865, outStateTuition:26568, medianEarnings:62196 },
+  "GA": { name:"Georgia",          sup:false, n:8,  admissionRate:47.4, avgSAT:1217, avgStudentSize:18212, inStateTuition:14970, outStateTuition:26996, medianEarnings:63207 },
+  "HI": { name:"Hawaii",           sup:true,  n:2,  admissionRate:67.0, avgSAT:1118, avgStudentSize:17900, inStateTuition:12186, outStateTuition:34086, medianEarnings:60200 },
+  "ID": { name:"Idaho",            sup:false, n:1,  admissionRate:75.5, avgSAT:1116, avgStudentSize:7747,  inStateTuition:9084,  outStateTuition:28320, medianEarnings:54670 },
+  "IL": { name:"Illinois",         sup:false, n:6,  admissionRate:46.3, avgSAT:1408, avgStudentSize:16765, inStateTuition:38096, outStateTuition:43873, medianEarnings:76267 },
+  "IN": { name:"Indiana",          sup:false, n:4,  admissionRate:52.5, avgSAT:1262, avgStudentSize:18206, inStateTuition:23614, outStateTuition:36201, medianEarnings:68980 },
+  "IA": { name:"Iowa",             sup:true,  n:3,  admissionRate:82.4, avgSAT:1200, avgStudentSize:22600, inStateTuition:9878,  outStateTuition:30842, medianEarnings:59400 },
+  "KS": { name:"Kansas",           sup:true,  n:3,  admissionRate:88.1, avgSAT:1178, avgStudentSize:19800, inStateTuition:10326, outStateTuition:26782, medianEarnings:57600 },
+  "KY": { name:"Kentucky",         sup:false, n:2,  admissionRate:72.7, avgSAT:1118, avgStudentSize:10282, inStateTuition:10704, outStateTuition:21571, medianEarnings:48008 },
+  "LA": { name:"Louisiana",        sup:false, n:3,  admissionRate:40.8, avgSAT:1225, avgStudentSize:14627, inStateTuition:30185, outStateTuition:38194, medianEarnings:55963 },
+  "ME": { name:"Maine",            sup:true,  n:2,  admissionRate:84.6, avgSAT:1145, avgStudentSize:10400, inStateTuition:11880, outStateTuition:30980, medianEarnings:55100 },
+  "MD": { name:"Maryland",         sup:false, n:4,  admissionRate:49.0, avgSAT:1450, avgStudentSize:13049, inStateTuition:24878, outStateTuition:39407, medianEarnings:73728 },
+  "MA": { name:"Massachusetts",    sup:false, n:8,  admissionRate:26.4, avgSAT:1496, avgStudentSize:12113, inStateTuition:58515, outStateTuition:61350, medianEarnings:84187 },
+  "MI": { name:"Michigan",         sup:false, n:3,  admissionRate:47.8, avgSAT:1211, avgStudentSize:15373, inStateTuition:15435, outStateTuition:41431, medianEarnings:65084 },
+  "MN": { name:"Minnesota",        sup:false, n:1,  admissionRate:75.5, avgSAT:1215, avgStudentSize:5144,  inStateTuition:10576, outStateTuition:17308, medianEarnings:58532 },
+  "MS": { name:"Mississippi",      sup:false, n:1,  admissionRate:77.6, avgSAT:1219, avgStudentSize:18397, inStateTuition:10202, outStateTuition:27637, medianEarnings:51513 },
+  "MO": { name:"Missouri",         sup:false, n:7,  admissionRate:61.7, avgSAT:1224, avgStudentSize:6358,  inStateTuition:26169, outStateTuition:35520, medianEarnings:63741 },
+  "MT": { name:"Montana",          sup:true,  n:2,  admissionRate:88.0, avgSAT:1148, avgStudentSize:13200, inStateTuition:7908,  outStateTuition:26508, medianEarnings:52800 },
+  "NE": { name:"Nebraska",         sup:true,  n:3,  admissionRate:76.2, avgSAT:1196, avgStudentSize:21400, inStateTuition:9914,  outStateTuition:26514, medianEarnings:60600 },
+  "NV": { name:"Nevada",           sup:false, n:1,  admissionRate:73.7, avgSAT:1132, avgStudentSize:15599, inStateTuition:9578,  outStateTuition:27720, medianEarnings:60614 },
+  "NH": { name:"New Hampshire",    sup:true,  n:2,  admissionRate:75.8, avgSAT:1251, avgStudentSize:14200, inStateTuition:18348, outStateTuition:33548, medianEarnings:66800 },
+  "NJ": { name:"New Jersey",       sup:false, n:8,  admissionRate:61.1, avgSAT:1303, avgStudentSize:12575, inStateTuition:27690, outStateTuition:37857, medianEarnings:75506 },
+  "NM": { name:"New Mexico",       sup:true,  n:3,  admissionRate:67.2, avgSAT:1114, avgStudentSize:18600, inStateTuition:7548,  outStateTuition:22948, medianEarnings:53400 },
+  "NY": { name:"New York",         sup:false, n:31, admissionRate:55.2, avgSAT:1299, avgStudentSize:10889, inStateTuition:30800, outStateTuition:37161, medianEarnings:70732 },
+  "NC": { name:"North Carolina",   sup:false, n:8,  admissionRate:42.5, avgSAT:1337, avgStudentSize:12342, inStateTuition:32569, outStateTuition:43443, medianEarnings:69032 },
+  "ND": { name:"North Dakota",     sup:false, n:1,  admissionRate:76.9, avgSAT:1178, avgStudentSize:9981,  inStateTuition:10951, outStateTuition:15570, medianEarnings:63552 },
+  "OH": { name:"Ohio",             sup:false, n:5,  admissionRate:59.5, avgSAT:1327, avgStudentSize:17093, inStateTuition:32058, outStateTuition:43561, medianEarnings:65122 },
+  "OK": { name:"Oklahoma",         sup:false, n:2,  admissionRate:75.8, avgSAT:1198, avgStudentSize:22254, inStateTuition:10016, outStateTuition:26566, medianEarnings:60270 },
+  "OR": { name:"Oregon",           sup:false, n:1,  admissionRate:77.3, avgSAT:1290, avgStudentSize:30743, inStateTuition:14400, outStateTuition:38190, medianEarnings:64010 },
+  "PA": { name:"Pennsylvania",     sup:false, n:7,  admissionRate:37.2, avgSAT:1400, avgStudentSize:14319, inStateTuition:45832, outStateTuition:52226, medianEarnings:87833 },
+  "RI": { name:"Rhode Island",     sup:false, n:2,  admissionRate:38.8, avgSAT:1353, avgStudentSize:10304, inStateTuition:44177, outStateTuition:54279, medianEarnings:81615 },
+  "SC": { name:"South Carolina",   sup:false, n:4,  admissionRate:58.5, avgSAT:1260, avgStudentSize:18514, inStateTuition:13215, outStateTuition:36190, medianEarnings:59341 },
+  "SD": { name:"South Dakota",     sup:true,  n:3,  admissionRate:86.4, avgSAT:1183, avgStudentSize:11100, inStateTuition:9230,  outStateTuition:12830, medianEarnings:54200 },
+  "TN": { name:"Tennessee",        sup:false, n:5,  admissionRate:52.9, avgSAT:1244, avgStudentSize:15065, inStateTuition:22736, outStateTuition:32658, medianEarnings:59463 },
+  "TX": { name:"Texas",            sup:false, n:10, admissionRate:57.1, avgSAT:1256, avgStudentSize:26909, inStateTuition:26714, outStateTuition:39966, medianEarnings:65824 },
+  "UT": { name:"Utah",             sup:false, n:1,  admissionRate:67.8, avgSAT:1376, avgStudentSize:32952, inStateTuition:6688,  outStateTuition:6688,  medianEarnings:75790 },
+  "VT": { name:"Vermont",          sup:false, n:1,  admissionRate:65.3, avgSAT:1374, avgStudentSize:11743, inStateTuition:19058, outStateTuition:45502, medianEarnings:62472 },
+  "VA": { name:"Virginia",         sup:false, n:5,  admissionRate:50.3, avgSAT:1393, avgStudentSize:17711, inStateTuition:19280, outStateTuition:39680, medianEarnings:70968 },
+  "WA": { name:"Washington",       sup:false, n:1,  admissionRate:39.1, avgSAT:1270, avgStudentSize:31942, inStateTuition:12973, outStateTuition:43209, medianEarnings:78466 },
+  "WV": { name:"West Virginia",    sup:true,  n:2,  admissionRate:81.2, avgSAT:1108, avgStudentSize:21200, inStateTuition:9044,  outStateTuition:24444, medianEarnings:49800 },
+  "WI": { name:"Wisconsin",        sup:false, n:2,  admissionRate:60.4, avgSAT:1324, avgStudentSize:23090, inStateTuition:10837, outStateTuition:30810, medianEarnings:67085 },
+  "WY": { name:"Wyoming",          sup:true,  n:1,  admissionRate:95.0, avgSAT:1168, avgStudentSize:12100, inStateTuition:5620,  outStateTuition:20620, medianEarnings:55600 },
+};
+
+// ═══════════════════════════════════════════════════════
+//  METRIC CONFIG
+// ═══════════════════════════════════════════════════════
+const metrics = {
+  admissionRate:   { label:"Admission Rate",           fmtShort: v => v.toFixed(1)+"%",         fmtRange: (a,b) => a.toFixed(0)+"% – "+b.toFixed(0)+"%" },
+  avgSAT:          { label:"Avg SAT Score",            fmtShort: v => v.toLocaleString(),         fmtRange: (a,b) => Math.round(a).toLocaleString()+" – "+Math.round(b).toLocaleString() },
+  avgStudentSize:  { label:"Avg Student Enrollment",   fmtShort: v => v.toLocaleString(),         fmtRange: (a,b) => Math.round(a/1000)+"K – "+Math.round(b/1000)+"K" },
+  inStateTuition:  { label:"Avg In-State Tuition",     fmtShort: v => "$"+v.toLocaleString(),     fmtRange: (a,b) => "$"+Math.round(a/1000)+"K – $"+Math.round(b/1000)+"K" },
+  outStateTuition: { label:"Avg Out-of-State Tuition", fmtShort: v => "$"+v.toLocaleString(),     fmtRange: (a,b) => "$"+Math.round(a/1000)+"K – $"+Math.round(b/1000)+"K" },
+  medianEarnings:  { label:"Median Earnings (10yr)",   fmtShort: v => "$"+v.toLocaleString(),     fmtRange: (a,b) => "$"+Math.round(a/1000)+"K – $"+Math.round(b/1000)+"K" },
+};
+
+const NUM_BUCKETS = 6;
+const COLOR_LO = "#E3DDD9";  // light warm gray
+const COLOR_HI = "#2B7CB8";  // forest blue (design system)
+
+let currentMetric = "admissionRate";
+
+// ═══════════════════════════════════════════════════════
+//  COLOR HELPERS
+// ═══════════════════════════════════════════════════════
+function getRange(metric) {
+  const vals = Object.values(stateData).map(d => d[metric]).filter(v => v != null);
+  return { min: Math.min(...vals), max: Math.max(...vals) };
+}
+
+function makeScale(metric) {
+  const { min, max } = getRange(metric);
+  return d3.scaleSequential(d3.interpolateRgb(COLOR_LO, COLOR_HI)).domain([min, max]);
+}
+
+function stateColor(abbr, metric) {
+  const d = stateData[abbr];
+  if (!d || d[metric] == null) return "#D8D4CF";
+  return makeScale(metric)(d[metric]);
+}
+
+// ═══════════════════════════════════════════════════════
+//  LEGEND
+// ═══════════════════════════════════════════════════════
+function buildLegend(metric) {
+  document.getElementById("legend-title").textContent = metrics[metric].label;
+  const { min, max } = getRange(metric);
+  const scale = makeScale(metric);
+  const step = (max - min) / NUM_BUCKETS;
+  const container = document.getElementById("legend-items");
+  container.innerHTML = "";
+
+  // Highest bucket first (dark → light, top to bottom)
+  for (let i = NUM_BUCKETS - 1; i >= 0; i--) {
+    const lo = min + i * step;
+    const hi = min + (i + 1) * step;
+    const mid = (lo + hi) / 2;
+    const color = scale(mid);
+
+    const item = document.createElement("div");
+    item.className = "legend-item";
+
+    const swatch = document.createElement("div");
+    swatch.className = "legend-swatch";
+    swatch.style.background = color;
+
+    const label = document.createElement("span");
+    label.className = "legend-range";
+    // top bucket: "X+"
+    if (i === NUM_BUCKETS - 1) {
+      label.textContent = metrics[metric].fmtRange(lo, hi).split(" – ")[0] + "+";
+    } else {
+      label.textContent = metrics[metric].fmtRange(lo, hi);
+    }
+
+    item.appendChild(swatch);
+    item.appendChild(label);
+    container.appendChild(item);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOOLTIP
+// ═══════════════════════════════════════════════════════
+const tip = document.getElementById("tooltip");
+
+function showTip(event, abbr) {
+  const d = stateData[abbr];
+  if (!d) return;
+  const val = d[currentMetric];
+  document.getElementById("tt-state").textContent = d.name + (d.sup ? " †" : "");
+  document.getElementById("tt-label").textContent = metrics[currentMetric].label;
+  document.getElementById("tt-value").textContent = val != null ? metrics[currentMetric].fmtShort(val) : "—";
+  moveTip(event);
+  tip.classList.add("visible");
+}
+
+function moveTip(event) {
+  const W = tip.offsetWidth || 200, H = tip.offsetHeight || 110;
+  let x = event.clientX + 16, y = event.clientY - 14;
+  if (x + W > window.innerWidth  - 10) x = event.clientX - W - 16;
+  if (y + H > window.innerHeight - 10) y = event.clientY - H + 14;
+  tip.style.left = x + "px";
+  tip.style.top  = y + "px";
+}
+
+function hideTip() { tip.classList.remove("visible"); }
+
+// ═══════════════════════════════════════════════════════
+//  FIPS → STATE ABBR MAP
+// ═══════════════════════════════════════════════════════
+const fipsToAbbr = {
+  "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT",
+  "10":"DE","11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL",
+  "18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD",
+  "25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE",
+  "32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND",
+  "39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD",
+  "47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV",
+  "55":"WI","56":"WY"
+};
+
+function getFips(d) { return d.id.toString().padStart(2, "0"); }
+
+// ═══════════════════════════════════════════════════════
+//  D3 MAP
+// ═══════════════════════════════════════════════════════
+const svg        = d3.select("#us-map");
+const projection = d3.geoAlbersUsa().scale(1260).translate([480, 295]);
+const path       = d3.geoPath().projection(projection);
+
+function updateColors() {
+  svg.selectAll(".state")
+    .transition().duration(420).ease(d3.easeCubicOut)
+    .attr("fill", d => stateColor(fipsToAbbr[getFips(d)], currentMetric));
+}
+
+fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
+  .then(r => r.json())
+  .then(us => {
+    const statesFeature = topojson.feature(us, us.objects.states);
+    const borderMesh    = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
+
+    svg.selectAll(".state")
+      .data(statesFeature.features)
+      .join("path")
+        .attr("class", "state")
+        .attr("d", path)
+        .attr("fill", d => stateColor(fipsToAbbr[getFips(d)], currentMetric))
+        .on("mousemove", function(event, d) {
+          const abbr = fipsToAbbr[getFips(d)];
+          if (abbr) { showTip(event, abbr); }
+        })
+        .on("mouseleave", hideTip);
+
+    svg.append("path")
+      .datum(borderMesh)
+      .attr("class", "state-borders")
+      .attr("d", path);
+
+    buildLegend(currentMetric);
+  })
+  .catch(() => {
+    svg.append("text")
+      .attr("x", 480).attr("y", 295)
+      .attr("text-anchor", "middle")
+      .style("font-family", "Figtree, sans-serif")
+      .style("fill", "#8A8A80")
+      .text("Could not load map — please check your internet connection.");
+  });
+
+// ═══════════════════════════════════════════════════════
+//  TOGGLE BUTTONS
+// ═══════════════════════════════════════════════════════
+document.querySelectorAll(".metric-btn").forEach(btn => {
+  btn.addEventListener("click", function () {
+    document.querySelectorAll(".metric-btn").forEach(b => b.classList.remove("active"));
+    this.classList.add("active");
+    currentMetric = this.dataset.metric;
+    updateColors();
+    buildLegend(currentMetric);
+  });
+});
+</script>
+</body>
+</html>
