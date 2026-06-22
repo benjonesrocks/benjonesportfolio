@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Areas · Ben Jones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:    #EFF6FF;
+      --near-black: #1A1A1A;
+      --forest:   #2B7CB8;
+      --lavender: #BFDBFE;
+      --orange:   #FFA946;
+      --sage:     #DBEAFE;
+      --offwhite: #E0EFFF;
+      --muted:    #8A8A80;
+      --radius:   12px;
+      --radius-pill: 9999px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Figtree', sans-serif;
+      background: var(--cream);
+      color: var(--near-black);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 3rem;
+      background: rgba(239,246,255,0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(26,26,26,0.08);
+    }
+    .nav-logo {
+      font-family: 'EB Garamond', serif;
+      font-weight: 400;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+      color: var(--near-black);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+    .nav-links a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--near-black); }
+    .nav-links a.active { color: var(--near-black); font-weight: 600; }
+    .nav-cta {
+      background: var(--lavender) !important;
+      color: var(--near-black) !important;
+      font-weight: 600 !important;
+      padding: 0.45rem 1.1rem;
+      border-radius: var(--radius);
+      transition: opacity 0.2s !important;
+    }
+    .nav-cta:hover { opacity: 0.8; }
+
+    /* ── NAV DROPDOWN ── */
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-trigger {
+      display: flex; align-items: center; gap: 0.35rem;
+      font-size: 0.9rem; font-weight: 500; color: var(--muted);
+      text-decoration: none; cursor: pointer;
+      transition: color 0.2s; user-select: none;
+    }
+    .nav-dropdown-trigger:hover,
+    .nav-dropdown:hover .nav-dropdown-trigger { color: var(--near-black); }
+    .nav-dropdown-trigger svg { transition: transform 0.2s; }
+    .nav-dropdown:hover .nav-dropdown-trigger svg { transform: rotate(180deg); }
+    .nav-dropdown-menu {
+      position: absolute; top: 100%; left: 50%;
+      transform: translateX(-50%) translateY(-6px);
+      padding-top: 0.75rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 200; min-width: 210px;
+    }
+    .nav-dropdown:hover .nav-dropdown-menu {
+      opacity: 1; pointer-events: all;
+      transform: translateX(-50%) translateY(0);
+    }
+    .nav-dropdown-menu-inner {
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(26,26,26,0.08);
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(26,26,26,0.12);
+      padding: 0.5rem;
+    }
+    .nav-dropdown-menu a {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.65rem 0.9rem; border-radius: 9px;
+      font-size: 0.88rem; font-weight: 500;
+      color: var(--near-black) !important;
+      text-decoration: none; transition: background 0.15s; white-space: nowrap;
+    }
+    .nav-dropdown-menu a:hover { background: var(--offwhite); color: var(--near-black) !important; }
+    .nav-dd-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 0.95rem;
+    }
+
+    /* ── SECTIONS ── */
+    .section-label {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--forest); margin-bottom: 1rem;
+    }
+    .section-label::before {
+      content: ''; display: inline-block;
+      width: 1.25rem; height: 1.5px;
+      background: var(--forest); border-radius: 2px;
+    }
+    .section-title {
+      font-family: 'EB Garamond', serif;
+      font-weight: 400;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      letter-spacing: -0.03em; line-height: 1.05;
+      margin-bottom: 2.5rem; color: var(--near-black);
+    }
+    .max-w { max-width: 1100px; margin: 0 auto; }
+
+    /* ── PAGE HERO ── */
+    .page-hero {
+      background: var(--near-black);
+      color: var(--cream);
+      padding: 5rem 3rem 4rem;
+    }
+    .page-hero .section-label { color: var(--orange); }
+    .page-hero .section-label::before { background: var(--orange); }
+    .page-hero .section-title { color: var(--cream); margin-bottom: 0.75rem; }
+    .page-hero-sub {
+      font-size: 1.1rem;
+      color: rgba(255,255,235,0.55);
+      max-width: 520px;
+      line-height: 1.7;
+    }
+
+    /* ── WORK CARDS ── */
+    #work { background: var(--offwhite); padding: 5rem 3rem; }
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+    .work-card {
+      background: var(--cream);
+      border: 1.5px solid rgba(26,26,26,0.08);
+      border-radius: var(--radius);
+      padding: 2.25rem;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+    }
+    .work-card:hover {
+      border-color: var(--forest);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(43,124,184,0.08);
+    }
+    .work-num {
+      font-family: 'EB Garamond', serif;
+      font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem;
+    }
+    .work-card h3 {
+      font-family: 'EB Garamond', serif;
+      font-size: 1.5rem; font-weight: 400;
+      letter-spacing: -0.02em; margin-bottom: 0.75rem; line-height: 1.2;
+    }
+    .work-card p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; }
+    .work-tag {
+      display: inline-block; margin-top: 1.25rem;
+      background: var(--sage); color: var(--forest);
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.25rem 0.75rem; border-radius: var(--radius-pill);
+    }
+
+    /* ── CONTACT ── */
+    footer { background: var(--near-black); color: var(--cream); padding: 2.5rem 3rem; }
+    .contact-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 2rem;
+    }
+    footer .section-label { color: var(--orange); }
+    footer .section-label::before { background: var(--orange); }
+    footer .section-title { color: var(--cream); margin-bottom: 0; font-size: clamp(2rem,4vw,3rem); }
+    .contact-email { display: flex; align-items: center; gap: 0.75rem; }
+    .contact-email a {
+      font-size: 1rem; color: var(--cream); text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,235,0.25); padding-bottom: 2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .contact-email a:hover { color: var(--orange); border-color: var(--orange); }
+    .contact-dot {
+      width: 8px; height: 8px; background: var(--orange); border-radius: 50%;
+      animation: blink 2s ease-in-out infinite; flex-shrink: 0;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+    .footer-note {
+      max-width: 1100px; margin: 2rem auto 0;
+      font-size: 0.75rem; color: rgba(255,255,235,0.25);
+      border-top: 1px solid rgba(255,255,235,0.08); padding-top: 1.5rem;
+    }
+
+    /* ── ANIMATIONS ── */
+    .fade-up { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1rem; }
+      .page-hero, #work, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="index copy.html" class="nav-logo">Ben Jones</a>
+    <ul class="nav-links">
+      <li class="nav-dropdown">
+        <a href="index copy.html" class="nav-dropdown-trigger">
+          Explore
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="nav-dropdown-menu-inner">
+            <a href="index copy.html#about">About</a>
+            <a href="index copy.html#interview">Interview Simulator</a>
+            <a href="index copy.html#company-finder">Company Finder</a>
+            <a href="index copy.html#college-map-section">US Colleges Map</a>
+          </div>
+        </div>
+      </li>
+      <li><a href="projects.html">Build Log</a></li>
+      <li><a href="work.html" class="active">Focus Areas</a></li>
+      <li><a href="contact.html">Let's Connect</a></li>
+    </ul>
+  </nav>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero">
+    <div class="max-w">
+      <div class="section-label">Focus Areas</div>
+      <h1 class="section-title">What I'm<br>working on</h1>
+      <p class="page-hero-sub">Three areas where I'm going deep. Real tools, not demos.</p>
+    </div>
+  </section>
+
+  <!-- WORK CARDS -->
+  <section id="work">
+    <div class="max-w">
+      <div class="work-grid fade-up">
+        <div class="work-card">
+          <div class="work-num">01</div>
+          <h3>AI Workflow Automation</h3>
+          <p>Building end-to-end processes that let AI handle repetitive tasks reliably, from file organization to scheduled tasks that run without babysitting.</p>
+          <span class="work-tag">Automation</span>
+        </div>
+        <div class="work-card">
+          <div class="work-num">02</div>
+          <h3>Custom Skills & Tools</h3>
+          <p>Building reusable AI skills, design system tools, and voice guides. Install once, use everywhere.</p>
+          <span class="work-tag">Skills</span>
+        </div>
+        <div class="work-card">
+          <div class="work-num">03</div>
+          <h3>Data & Research Tools</h3>
+          <p>Building AI-powered dashboards, spreadsheet analyzers, and research tools that turn raw data into something you can actually use.</p>
+          <span class="work-tag">Data</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <footer id="contact">
+    <div class="contact-inner">
+      <div>
+        <div class="section-label">Contact</div>
+        <h2 class="section-title">Let's talk</h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.65rem;">
+        <div class="contact-email">
+          <div class="contact-dot"></div>
+          <a href="mailto:benjones5897@gmail.com">benjones5897@gmail.com</a>
+        </div>
+        <div class="contact-email">
+          <div class="contact-dot" style="animation:none;background:rgba(255,255,235,0.2);"></div>
+          <a href="tel:+18018889549">(801) 888-9549</a>
+        </div>
+        <div class="contact-email">
+          <div class="contact-dot" style="animation:none;background:rgba(255,255,235,0.2);"></div>
+          <a href="https://linkedin.com/in/ben-jones-643987253" target="_blank" rel="noopener noreferrer">Connect on LinkedIn</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">© 2026 Ben Jones · AI Builder Portfolio</div>
+  </footer>
+
+  <script>
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), 80); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+  </script>
+</body>
+</html>
